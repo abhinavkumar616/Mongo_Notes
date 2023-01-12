@@ -1,0 +1,786 @@
+Pending: if those table dont exist then or they are empty then what will it return
+
+
+
+To run with CLI, Download mongosh(MongoDb shell) seperatelly and dont use pretty with it
+
+Note: 
+- every query returns the results
+- document's key and values are case sensitive
+- 16mb is max size for per decoument
+- nested JSON support upto 100
+- find() return only 20 results
+- documents are stored in BSON
+
+
+DATA Types Supported
+- String
+- Integer
+- Date
+- Timestamp
+- Double
+- Boolean
+- Array
+- Object
+- Null
+- Undefined
+- Regex
+
+
+
+1. show dbs or show databases  //to show all databases
+2. use <dbsname>  //to use particular database if exist,otherwise create a new database
+3. show collections or show tables // to show all collections or say tables present in database
+
+
+db.book.find({'name': {$regex: /wild/}}).toArray()
+db.book.find({'name': {$regex: /wild/}}).forEach(i => printjson(i.pages)) 
+
+
+create Collection  or table
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+  db.createCollection("student")  // create a collection in DB
+
+  callback result: {ok: 1}
+
+
+drop Collection  or table
+--------------------------------------------------------------------------------------------------------------------------------------------------------------
+  db.student.drop()  // drop a collection in DB
+
+  callback result: true
+
+
+
+insert(insertOne,insertMany)
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+  IMP Note: data will be insert in sequence. Recent data will go in bottom.
+
+  1. db.student.insertOne({name: "abhinav",dsg:"developer",salary: 35000,age:25,city:"patna",state:"bihar", date: new Date(), createdAt: new Timestamp() }) 
+    
+  //store a single document in collection
+  - here document _id will be autogenerate which is unique or say primary and its will be in Binary form like ObjectId("63ab3784077bd427f6677822")
+  - if student collection is not there then it will create a student collection and insert the document
+
+                                        or
+  // insert with custom _id
+    db.student.insertOne({name: "abhinav",dsg:"developer",salary: 35000,age:25,city:"patna",state:"bihar",_id: 'Abc'}) 
+  - Now _id will not generate auto and it will take the given value
+  - cant insert data with dublicate _id (E11000 duplicate key error collection)
+
+  callback: result {'acknowledged' : true, 'insertedId': 'Abc'}
+
+
+  2. db.student.insertMany([{name: "rahul",dsg:"Analyst",salary: 35000,age:30,city:"patna",state:"bihar"},
+  {name:"saurav",dsg:"Software Developer",salary:65000,age:31,city:"patna",state:"bihar"},
+  {name:"roushan",dsg:"Bussiness",salary:85000,age:29,city:"Noida",state:"UP"},
+  {name:"gaurav",dsg:"Support",salary:"26000",age:32,city:"Jaipur",state:"Rajasthan"}])
+
+
+  callback: result {'acknowledged':true,
+                    'insertedIds': {
+                  '0': ObjectId("63ab3784077bd427f6677822"), 
+                  '1': ObjectId("63ab3784077bd427f6677823"), 
+                  '2': ObjectId("63ab3784077bd427f6677824")}}
+
+
+  // insert many documents in collection and we have to pass an array
+
+
+Select(findOne,find)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  1. db.student.find()  // to show all data present in 'student' collection                   returns an array
+            or
+    db.student.find().pretty() -- show documents inside the collection with JSON format...
+
+  2. db.student.findOne() // show a first document inside the collection                   returns an Object
+
+  3. db.student.findOne({_id: 'abc'}) //search _id: 'abc'.As id is unique so mainly we use findOne with _id and its case sensitive. Abc and abc will not same. And returns null if dont find anything.
+
+
+  4. db.student.findOne({_id: 'abc'},{age:1}) //search document with _ID 'abc' and return only property age from it. First param in find() works as search filter. Second param works as to filter those properties which u need. _id will come by default along age here. It helps for faster performance
+
+        original                                                          result
+
+  ex. { _id: 'abc',                                                     { _id: 'abc', 
+        name: 'Aman'                                                      age: 30}
+        age: 30
+        salary: 15000
+      }
+
+  5. db.student.findOne({_id: 'abc'}).age //search document with _ID 'abc' and return only property age from it. First param in find() works as search filter. Second param works as to filter those properties which u need. _id will come by default along age here. It helps for faster performance
+
+        original                                                          result
+
+  ex. { _id: 'abc',                                                          30 
+        name: 'Aman'                                                    
+        age: 30
+        salary: 15000
+      }
+
+                                  or
+
+      db.student.find({_id: 'abc'}).0.age   as find return arry and findOne return an object
+
+  6. db.student.find({"address.city": 'patna'})  //nested document selection   //worked with object and array and use quotes "address.city"
+  7. db.student.find({"address.city": 'patna'},{_id: 0,age: 0})  //mark fields 0 which you dont want to retreive
+  8. db.student.find({"address.city": 'patna'},{_id: 0,age: 1})  //now only age field  will retreive
+  
+
+  
+
+
+addtional methods for find
+-----------------------
+Note: applicable only with find() not with findOne()
+
+1. db.student.find().limit(5)   // show first 5 documents in colections...
+
+2. db.student.find().skip(5)   // skip first 5 data and then show a after all documents
+
+3. db.student.find().skip(5).limit(3)  // skip a starting 5 data and show 3 documents
+
+4. db.student.find({state:"bihar"}).count() // provide a count no of documents
+
+5. db.student.find().sort({salary:1}) //  with 1 sort documents as per salary in Assending order
+
+6. db.student.find().sort({salary:-1}) // with -1 sort documents as per salary in desending order
+
+
+
+
+
+update(updateOne, UpdateMany, update)
+--------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+  using of updateOne and UpdateMany
+  -----------------------------
+  IMP Note: 
+  - If property is available in doc then it will update that or else add a new property
+  - updateOne and UpdateOne only update the property and they dont replace the whole object and neither delete any property
+  - $set is used to set or update the property
+
+
+  1. db.student.updateMany({},{$set: {class: 6th}})  // {} means search all and update all and set a new property to every document
+
+  2. db.student.updateMany({title: 'abcd'},{$set: {class: 6th}})  // search docs with title 'abcd' update all documents and set property to those documents
+
+  3. db.student.updateOne({title: 'abcd'},{$set: {class: 6th}})  // search docs with title 'abcd' then update frist one and set property to that document
+
+  4. db.student.updateOne({title: 'abcd'},{$set: {class: 6th, school: narwana}})  // search docs with title 'abcd' then update frist one and set multiple properties to that document
+
+  5. db.student.updateMany({salary: {$lte: 15000}},{$set: {class: 6th}})  // search docs with salary less than or equal to 15000 and update property to those documents
+
+  callback: result {'acknowledged' : true, 'matchedCount': 1 , 'modifiedCount': 1}
+
+  use of $inc, $min, $max, $upsert
+  __________________________________
+  Input:
+  
+   item: [{
+    _id: 'xyx',
+    name: 'pen'
+    price: 10}]
+
+ 
+  6. db.student.updateMany({_id: 'xyx'},{$inc:{price: 2}})  // in matched document increase price with 2 than previous price i.e 12
+  7. db.student.updateMany({_id: 'xyx'},{$inc:{price: -2}})  // in matched document decrese price with 2 than previous price i.e 8
+  8. db.student.updateMany({_id: 'xyx'},{$min:{price: 6}})  // in matched document compare price between 6 and 10 and which one is minimum set it then it will set 6
+    output:
+    {_id: 'xyx',
+    name: 'pen'
+    price: 6}]
+
+  9. db.student.updateMany({_id: 'xyx'},{$min:{price: 12}})  // in matched document compare price between 12 and 10 and which one is minimum set it then it will set 10
+    output:
+    {_id: 'xyx',
+    name: 'pen'
+    price: 10}]
+  
+  10. db.student.updateMany({_id: 'xyx'},{$max:{price: 12}})  // in matched document compare price between 12 and 10 and which one is maximum set it then it will set 10
+    output:
+    {_id: 'xyx',
+    name: 'pen'
+    price: 12}]
+
+ 
+
+  using of update
+  ----------------
+  - $set is not used in update
+  1. db.student.update({salary: 15000}},{class: 6th})  // search docs with salary 15000 and replace whole doc except id to class:6th 
+
+        before                                                                                             after
+  ex. {_id: 'ObjectId("63ab3784077bd427f6677823")',                                            {_id: 'ObjectId("63ab3784077bd427f6677823")',
+      name: "rahul",                                                                          class: 6th}                                 
+      dsg:"Analyst",
+      salary: 15000,
+      age:30,
+      city:"patna",
+      state:"bihar"}
+
+
+  as update will replace all properties of all matched documents so if we want to replace all properties of first matched document only then use below query
+
+    db.student.replaceOne({salary: 15000}},{class: 6th})
+
+
+  callback: WriteResult {'nMatched' : 1, 'nUpserted': 0, 'nModified': 1}
+
+
+delete(deleteOne, deleteMany)
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  1. db.student.deleteMany({})  // {} means search all and delete all
+
+  2. db.student.deleteOne({title: 'abcd'})  // search docs with title 'abcd' then delete frist one document
+
+  3. db.student.deleteMany({title: 'abcd'})  // search docs with title 'abcd' delete all those documents
+
+  callback: result {'acknowledged' : true, 'deletedCount': 1}
+
+
+*******************************************************Operators********************************************
+ Note: these operators we use while selection, updation or deletion
+
+
+  Comparison Operators
+ --------------------------
+  $gt  Greater than 
+  $gte Greater than equals 
+  $lt  Less than
+  $lte Less than equals
+  $eq  equals to
+  $ne not equals
+  $in in this array // works as or in array
+  $nin not in this array
+
+    1. db.student.find({salary:{$gt:35000}})  //search all documents in which salary greater than 35000
+    2. db.student.find({salary:{$gte:35000}})  //search all documents in which salary greater than or equal to 35000
+    3. db.student.find({salary:{$lt:35000}})  //search all documents in which salary less than 35000
+    4. db.student.find({salary:{$lte:35000}})  //search all documents in which salary less than or equal to 35000
+    5. db.student.find({salary:{$eq:35000}})  //search all documents in which salary equal to 35000
+                or
+      db.student.find({salary: 35000})
+
+    6. db.student.find({salary:{$ne:35000}})  //search all documents in which salary not equal to 35000
+
+
+
+    7. db.student.find({hobbies: 'drama'})  //search all documents in which student hobbies has drama as well as other hobbies
+                                                           
+       db.student.find({hobbies: {$in: ['drama', 'music']}})  //search all documents in which student hobbies has drama or music as well as others
+                                           
+       db.student.find({hobbies: ['drama']})  //search all documents in which student hobbies has only drama
+       
+
+    8. db.student.find({hobbies: {$nin: ['drama', 'music']}})  //search all documents in which student hobbies has not drama or music along with others
+
+
+
+  logical Operators
+  -------------------
+  $or
+  $nor
+  $and   // works as &all in array
+  $not
+  
+    1. db.student.find({$or:[{city:"patna"},{city:"Jaipur"}]}) // find documents where city is patna or jaipur
+    2. db.student.find({$nor:[{city:"patna"},{state:"bihar"}]}) // find documents where city is not patna or state is not bihar
+    3. db.student.find({$and:[{city:'patna'},{state: 'bihar'}]}) // find the documents where city is patna and state is bihar
+    4. db.student.find({$not:[{city:'patna'},{state: 'bihar'}]}) // find the documents where city is not patna and state is not bihar
+
+
+
+
+  Element Operators
+  -------------------
+  $exists   // checks for existance of a property
+  $type    //
+
+  
+    1. db.student.find({'description': {$exists: true}}) // find documents where document has description property
+    
+    2. db.student.find({'city': {$type: 'string'}}) // find documents where city property is of string type
+    
+
+
+  Evaluation Operators
+  -------------------
+  $regex
+  $expr
+  
+    1. db.student.find({city:{$regex: /bih/}}) // find documents where city property value matches exact with regex
+                                      or
+       db.student.find({city:{$regex: /bih/i}}) // with i find documents where city property value matches with regex without case sensitive
+
+    2. db.monthlyBudget.find({$expr: {$gt: ['$spent','$budget']}}) // find documents and compare document's properties spent and budget where spent > budget
+
+
+
+  Array Query Operators IMP
+  ----------------------------
+
+  ex.
+  [
+    {
+      _id: ObjectId("63b8ceec380490635ecbf081"),
+      name: 'a',
+      hobbies: [ 'sports', 'drama', 'music', 'painting' ],
+      exams: [
+        { subject: 'maths', score: 8 },
+        { subject: 'science', score: 12 }
+      ],
+      results: [ 80, 90, 92 ]
+    },
+    {
+      _id: ObjectId("63b8cf1f380490635ecbf082"),
+      name: 'b',
+      hobbies: [ 'sports', 'riding', 'drama' ],
+      exams: [
+        { subject: 'maths', score: 14 },
+        { subject: 'science', score: 6 }
+      ],
+      results: [ 67, 71, 90 ]
+    },
+    {
+      _id: ObjectId("63b8cf46380490635ecbf083"),
+      name: 'c',
+      hobbies: [ 'bicyling' ],
+      exams: [
+        { subject: 'maths', score: 25 },
+        { subject: 'science', score: 11 }
+      ],
+      results: [ 45, 70, 25 ]
+    }
+  ]
+
+  $size
+  $all  //works as $and
+  $elemMatch
+  $slice
+
+  1. db.student.find({hobbies:{$size: 2}}) // find documents where hobbies property array has size 2 i.e exact 2 items are there+
+  
+  2. db.student.find({hobbies:{$all: ['drama','sports']}}) // find documents where hobbies property array has items drama and sports
+
+  3. db.student.find({exams: { subject: 'maths', score: 25 }) // find documents where exams array has same exact property
+  
+  4. XXX db.student.find({exams:{subject: 'maths'}) // wrong as it will not return anything we have to write the exact item to match. as it matches the whole object
+  
+     db.student.find({exams.subject: {'maths'}) //right //find documents where exams array has subject as maths// in array we can also write exams.subject in  mongo
+                                   or 
+    db.student.find({exams: {$elemMatch: {subject: 'maths'}}}) // elemMatch goes on every item and then check the condition one by one
+
+  5. $elemMatch is useful in array
+  
+  Scenario 1- here we parse those documents in which results items satisfy condition(all values >75 and all values <95). i.e 1st object having results: [ 80, 90, 92 ] in which each items satisfy the both conditions
+  
+  Problem with  db.student.find($and: [{results: {$gte: 75}}, {results: {$lt: 95}}]})
+  Ans it will go in results and check condition one by one on full array they both return true and we will get both object having
+    results: [ 80, 90, 92 ]
+    results: [ 67, 71, 90 ]
+
+  Solution  db.student.find({results: {$elemMatch: {$gt: 75},{$lt: 95} } })
+
+  Scenario 2- here we parse those documents in which exams having subject a maths and score in maths is greater than 8
+  
+  Problem with  db.student.find({"exams.subject": 'maths', {exams.score: {$gt: 8}}]})
+    it will seach in whole array and check first condition then in second condition whether its maths or science where score is gt 8 it will take it
+
+  Solution  db.student.find({exams:{$elemMatch:{subject:'maths',score:{gt:8}}}}) 
+    it will go in results and check condition one by one on every element
+
+  6. db.student.find({name:'a'},{_id:0,name:1,exams:{$slice:1}})    // find documents where name 'aman', and exam array slice to 1st element
+    result {name:'a',exam:[{ subject: 'maths', score: 8 }]}
+  
+  7. db.student.find({name:'a'},{_id:0,name:1,exams:{$slice:[1,2]}}) // find documents where name 'aman', and exam array slice skip 1st element and retreive 2nd
+    result {name:'a',exam:[{ subject: 'science', score: 12 }]}
+
+  8. db.student.find({hobbies: 'drama'}) // all documents where hobbies have particular 'drama' as well as other hobbies
+    result:
+     [
+      {
+        _id: ObjectId("63b8ceec380490635ecbf081"),
+        name: 'a',
+        hobbies: [ 'sports', 'drama', 'music', 'painting' ]
+      },
+      {
+        _id: ObjectId("63b8cf1f380490635ecbf082"),
+        name: 'b',
+        hobbies: [ 'sports', 'riding', 'drama' ]
+      }
+    ]
+  9. db.student.find({hobbies: 'drama'},{"hobbies.$":1}) // all documents where hobbies have particular 'drama' as well as other hobbies and it will filter out other hobbies 
+      //$ means get the selected one
+      result:
+      [
+        {
+          _id: ObjectId("63b8ceec380490635ecbf081"),
+          name: 'a',
+          hobbies: [ 'drama' ]
+        },
+        {
+          _id: ObjectId("63b8cf1f380490635ecbf082"),
+          name: 'b',
+          hobbies: [ 'drama' ]
+        }
+      ]
+  10. db.student.find({hobbies: 'drama'},{"hobbies":{$elemMatch: {$eq: 'riding'}}}) // all documents where hobbies have particular 'drama' as well as other hobbies and it will filter out all hobbies except riding
+      [
+        { _id: ObjectId("63b8ceec380490635ecbf081"), name: 'a' },
+        {
+          _id: ObjectId("63b8cf1f380490635ecbf082"),
+          name: 'b',
+          hobbies: [ 'riding' ]
+        }
+      ]
+
+
+  
+  
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Stats()
+
+db.stats()  // give database stats   like total size, averageSize and how many collection are there
+db.student.stats()   //git database collection student stats  like total size, averageSize and how many documents are there
+
+8529607658
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+RelationShip
+
+1. One to One
+
+person: [{_id: ObjectId("63ab3784077bd427f6677822"),name: Aman, salary: 34000, department: 'science', passport: ObjectId("63ab3784077bd427f663434")}]
+
+passport: [{_id: ObjectId("63ab3784077bd427f663434"), expirtDate: 12/2/2025, dateOfIssue: 14/2/2012, passportNo: 123mdk34}]
+
+
+Here we have made 2 seperate documents one for person and 1 for passport
+Here 1 person can have 1 passportnumber and we are refering that document
+but to get a passport no we have to use 2 queries while we can make it done with a single query using below schema
+
+
+                                                           or
+person: [{_id: ObjectId("63ab3784077bd427f6677822"),name: Aman, salary: 34000, department: 'science', passport: {expirtDate: 12/2/2025, dateOfIssue: 14/2/2012, passportNo: 123mdk34}]
+
+
+
+
+2. One to Many
+
+person: [{_id: ObjectId("63ab3784077bd427f6677822"),name: Aman, salary: 34000, department: 'science', passport: ObjectId("63ab3784077bd427f663434")}]
+
+address: [{_id: ObjectId("63ab3784077bd427f66344343"), type: 'home', address: sdsddsd, district: jads, state: MH, pincode: 123433, belongsTo: ObjectId("63ab3784077bd427f6677822")},
+          {_id: ObjectId("63ab3784077bd427f66344344"), type: 'work', address: sdsddsd, district: jasa, state: MH, pincode: 126232, belongsTo: ObjectId("63ab3784077bd427f6677822")}
+         ]
+
+Here we have made 2 seperate documents one for person and 1 for address
+Here 1 person can have multiple address and in address are refering that person which they belongs
+but to get address we have to use 2 queries and it will take so much time for excution instead we can do the below one
+
+person: [{_id: ObjectId("63ab3784077bd427f6677822"),
+          name: Aman, 
+          salary: 34000, 
+          department: 'science', 
+          passport: {expirtDate: 12/2/2025, dateOfIssue: 14/2/2012, passportNo: 123mdk34}
+          address: [{type: 'home', address: sdsddsd, district: jads, state: MH, pincode: 123433, belongsTo: ObjectId("63ab3784077bd427f6677822")},
+                    {type: 'work', address: sdsddsd, district: jasa, state: MH, pincode: 126232, belongsTo: ObjectId("63ab3784077bd427f6677822")}]
+          ]
+
+
+3. Many to Many
+
+
+
+
+
+
+
+Perfomace booster techinque
+--------------------------------------------------------------------------------------------------------------------------------------
+1. subset pattern Technique for one to many
+-----------------------------------------------
+as we have limited no of address then will be ok but if we reviews or comments where the no are unlimited then it will make our document heavy
+
+product: [{_id: ObjectId("63ab3784077bd427f6677822"),
+          name: cycle, 
+          price: 34000, 
+          brand: 'BMW', 
+          reviews: [{userid: ObjectId("63ab3784077bd427f6677822"), text: ssdsdsds}, 
+                    {userid: ObjectId("63ab3784077bd427f6677232"), text: 'r4r3wfwt'},
+                   {userid: ObjectId("63ab3784077bd427f66778545"), text: 'asrerfdf2fwf'},
+                   {userid: ObjectId("63ab3784077bd427f66778221"), text: 'sdsfdf3e354rasfwg'},
+                   {userid: ObjectId("63ab3784077bd427f66778466"), text: 'dsds3r4t4'},
+                   {userid: ObjectId("63ab3784077bd427f66778776"), text: 'adsdswew3'}       
+                   ]
+          ]
+
+
+
+reviews: [{_id:'1', userid: ObjectId("63ab3784077bd427f6677824"), text: ssdsdsds}, 
+          {_id:'2',userid: ObjectId("63ab3784077bd427f667723243"), text: 'r4r3wfwt'},
+          {_id:'3',userid: ObjectId("63ab3784077bd427f667785455"), text: 'asrerfdf2fwf'},
+          {_id:'4',userid: ObjectId("63ab3784077bd427f667782215"), text: 'sdsfdf3e354rasfwg'},
+          {_id:'5',userid: ObjectId("63ab3784077bd427f667784667"), text: 'dsds3r4t4'},
+          {_id:'6',userid: ObjectId("63ab3784077bd427f667787768"), text: 'adsdswew3'}       
+         ]
+
+Here reviews count is increasing if we put it in a single document then it will make performance slow instead we can add top 10 reviews with product and all reviews in other review document
+it will increase our background task to manage when user edit or delete something but it will be helpful and we can load other reviews when user hit the see more button. And first 5 reviews we can show with product
+
+
+2. Document Reference
+-------------------------------
+book:[{name: 'wild fire', author: 'Deen dayal', pages: 216, price: '100' publisherDetails: {name:'vikas Prashidh', location: 'haryana', address:'123232dsd'},
+{name: 'Book of Steel', author: 'Peelu', pages: 400, price: '200' publisherDetails: {name:'vikas Prashidh', location: 'haryana', address:'123232dsd'},
+{name: 'man of rise', author: 'kalu', pages: 89, price: '300' publisherDetails: {name:'vikas Prashidh', location: 'haryana', address:'123232dsd'}
+]
+
+
+here publisher can publish so many books and the data is getting redundand again and again. we can create a publisher document and refer that doc
+
+
+book:[{name: 'wild fire', author: 'Deen dayal', pages: 216, price: '100' publisherDetails: ObjectId("63ab3784077bd427f6677824")},
+{name: 'Book of Steel', author: 'Peelu', pages: 400, price: '200' publisherDetails: ObjectId("63ab3784077bd427f6677824")},
+{name: 'man of rise', author: 'kalu', pages: 89, price: '300' publisherDetails: ObjectId("63ab3784077bd427f6677824")}
+]
+
+publisher:[{_id: ObjectId("63ab3784077bd427f6677824") ,name:'vikas Prashidh', location: 'haryana', address:'123232dsd'}]
+
+
+IMP: we can add book reference in publisher too but there will be so many books and it will create a big array which will make our document heavy
+ex. publisher:[{_id: ObjectId("63ab3784077bd427f6677824") ,name:'vikas Prashidh', location: 'haryana', address:'123232dsd'},booksId:[121,124,14e4]]
+
+
+
+
+3. Many to Many
+
+video no 21
+
+
+***********************************************************Aggregate or Join 2 documents***************************************************
+ 
+ex.
+
+book:[{name: 'wild fire', author: 'Deen dayal', pages: 216, price: '100', publisherDetails: ObjectId("63ab3784077bd427f6677824")}]
+
+publisher:[{_id: ObjectId("63ab3784077bd427f6677824") ,name:'vikas Prashidh', location: 'haryana', address:'123232dsd'}]
+
+
+
+Query:
+db.currentTbale.aggregate({$lookup: {from: 'otherTable', localField: 'FieldOfCurrentTable', foreignField:"FieldOfOtherTable", as: "resultLabel"}})
+
+db.book.aggregate({$lookup: {from: 'publisher', localField: 'publisherDetails', foreignField:"_id", as: "publisher"}})
+
+
+Output:
+
+book:[{name: 'wild fire', author: 'Deen dayal', pages: 216, price: '100', publisher: {_id: ObjectId("63ab3784077bd427f6677824") ,name:'vikas Prashidh', location: 'haryana', address:'123232dsd'}]
+
+
+
+
+
+// Join more than 2 docs
+
+Query:
+db.currentTbale.aggregate({$lookup: {from: 'otherTable', localField: 'FieldOfCurrentTable', foreignField:"FieldOfOtherTable", as: "resultLabel"}}, {$lookup: {from: 'otherTable', localField: 'FieldOfCurrentTable', foreignField:"FieldOfOtherTable", as: "resultLabel"}})
+
+
+**************************************************Schema Validation and Updation ***************************************************************************
+
+1. Creation of schema
+
+we have to design it first then apply the schema validations
+
+
+book =[
+title: ‘Book 1',
+price: 12.899,
+description: 'Sample description',
+authors: ['Leela', 'John'],
+status: ‘active’,
+publisher: {
+  name: ‘Leela Web Dev',
+  address: ‘street 1'
+}]
+
+
+ 
+
+ 
+#Query:
+
+
+// update using createCollection()
+- validator is for schema validations 
+- validationAction is for giving as warning or error if a document doesnt meet requirement of validator 
+- description is for what message you want to give if that validation fail
+
+
+db.createCollection("book", {
+  validator: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['title', 'price', 'authors','status', 'publisher'],
+      properties: {
+        title: {
+          bsonType: 'string',
+          description: 'title should be in string format'
+        },
+        price: {
+          bsonType: 'double',
+          description: 'price should be in double format'
+        },
+        authors: {
+          bsonType: 'array',
+          items: {
+            bsonType: 'string',
+            description: 'price should be in array format'
+          }
+        },
+        status: {
+          enum: ['active','inactive'],
+          description: 'status should be in active or in active'
+        },  
+        publisher: {
+          bsonType: 'object',
+          required: ['name', 'address'],
+          properties: {
+            name: {
+              bsonType: 'string',
+              description: 'name should be in string format'
+            },
+            address: {
+              bsonType: 'string',
+              description: 'address should be in string format'
+            }
+          }
+        }
+      }
+    }
+  },
+  validationAction: 'warning'
+})
+
+
+
+// update using runCommand()
+- collMod is to define which collection we have to apply it
+- validator is for schema validations 
+- validationAction is for giving as warning or error if a document doesnt meet requirement of validator
+- add description as required and validationAction as error
+
+db.runCommand({
+  collMod: 'book',
+  validator: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['title', 'price', 'description', 'authors','status', 'publisher'],
+      properties: {
+        title: {
+          bsonType: 'string',
+          description: 'title should be in string format'
+        },
+        price: {
+          bsonType: 'double',
+          description: 'price should be in double format'
+        },
+        description: {
+          bsonType: 'string',
+          description: 'description should be in string format'
+        },
+        authors: {
+          bsonType: 'array',
+          items: {
+            bsonType: 'string',
+            description: 'price should be in array format'
+          }
+        },
+        status: {
+          enum: ['active','inactive'],
+          description: 'status should be in active or in active'
+        },  
+        publisher: {
+          bsonType: 'object',
+          required: ['name', 'address'],
+          properties: {
+            name: {
+              bsonType: 'string',
+              description: 'name should be in string format'
+            },
+            address: {
+              bsonType: 'string',
+              description: 'address should be in string format'
+            }
+          }
+        }
+      }
+    }
+  },
+  validationAction: 'error'
+})
+
+Ques: If a schema is applied afer data is already inserted in collection?
+Ans it will apply but it will not let update that document and show error or warning
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
