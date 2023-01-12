@@ -1,0 +1,84 @@
+*show dbs- for show a database...
+*use college-- for use college databse if exist,otherwise create a college name database
+*db.createCollection("student")-- create a collection in DB
+*db.getCollectionNames(); -- find a all collections inside the databases
+
+*db.student.insertOne({name: "abhinav",dsg:"developer",salary: 35000,age:25,city:"patna",state:"bihar"}) 
+-- store a single object data in collection using insertOne() insert single object
+
+*db.student.insert([{name: "abhinav",dsg:"developer",salary: 35000,age:25,city:"patna",state:"bihar"},
+{name:"kumar",dsg:"Software Engineer",salary:45000,age:26,city:"jehanabad",state:"bihar"},
+{name:"sharma",dsg:"Support Engineer",salary:55000,age:27,city:"gaya",state:"bihar"},
+{name:"Nick",dsg:"trainer",salary:"66000",age:30,city:"Noida",state:"UP"}])-- store a multiple data in collections using insert() multiple objects..
+
+*db.student.insertMany([{name: "rahul",dsg:"Analyst",salary: 35000,age:30,city:"patna",state:"bihar"},
+{name:"saurav",dsg:"Software Developer",salary:65000,age:31,city:"patna",state:"bihar"},
+{name:"roushan",dsg:"Bussiness",salary:85000,age:29,city:"Noida",state:"UP"},
+{name:"gaurav",dsg:"Support",salary:"26000",age:32,city:"Jaipur",state:"Rajasthan"}])---
+--using insertMany() you can add multiple data inside the DB, and it will also show the id of these objects...
+
+*show collections -- show a collection name in the DB
+*db.student.find() -- show a data inside the collections
+*db.student.findOne() -- show a first data inside the collections...
+*db.student.find().pretty() -- show a data inside the collections with JSON format...
+*db.student.find().pretty().limit(5) -- show a starting 5 objects data from the colections...
+*db.student.find().pretty().skip(5) -- skip a starting 5 data and then show a after all object data from collections
+*db.student.find().pretty().skip(5).limit(3)  -- skip a starting 5 data and show a after 3 object data..
+*db.student.find({name:"abhinav"})  -- show only those data whose name is abhinav inside the collections...find()
+db.student.find({name:"abhinav"},{name:1,departmrnt:1})
+*db.student.find({name:"abhinav"}).pretty()
+*db.student.findOne({name:"abhinav"}) -- show only one Objectdata whose name is abhinav inside the collections...findOne()
+*db.student.find({state:"bihar"}).pretty().count() -- provide a count no of All data from city=bihar...
+*db.student.find({state:"bihar"}).pretty() -- show a all data from city=bihar...
+*db.student.find({$or:[{city:"patna"},{city:"Jaipur"}]}).pretty() -- using $or condition we can get the particular data inside the collections...
+*db.student.find({$and:[{city:"patna"},{state:"bihar"}]}).pretty() -- using $and compare the two fields, and provide the data
+*db.student.find({salary:{$gt:35000}}).pretty()-- using $gt for fetching a greater than data
+*db.student.find({salary:{$gte:35000}}).pretty() -- using $gte for fetching a greater than equal data
+*db.student.find({salary:{$gte:35000}}).pretty().count() -- you will get the only count no, whose salary is >= 35000....
+*db.student.find({salary:{$gte:35000}}).pretty().skip(2).limit(1) -- if i want to fetch the 1 data after the 2 data from the collections..
+ -- skip() is used to skip no of the data.. limit() is used to fetch the limited data, ex- limit(1)- here you can fetch only one data.....
+*db.student.find().sort({salary:1}) -- show sort a Assending order data with the help of 1.
+*db.student.find().sort({salary:-1}) --show sort a Dessending order data with the help of -1.
+*db.student.find({$and:[{salary:{$gte:45000}},{salary:{$lte:100000}}]}).pretty() -- show the data between 45000 to 100000...
+*db.student.find({$and:[{salary:{$gte:45000}},{salary:{$lte:100000}},{state:"bihar"}]}).pretty() -- show the data between 45000 to 100000 where state=bihar.
+
+
+
+*Update the data in Mongodb
+
+.db.info.update({name:"sam"},{$set:{name:"sameer"}})  ---- update name without using ObjectId
+.db.info.update({_id:ObjectId("63886ae788408cc1d1bd2d6e")},{$set:{age:27}}) --- update age using ObjectId
+.db.info.update({_id:ObjectId("63886ae788408cc1d1bd2d6e")},{$set:{name:"samsung",age:28}})  -- if you want to update multiple fields inside the id..
+
+
+*Delete the data in MongoDB
+
+.db.info.remove({name:"samsung"})  ... delete a single data without using id..
+.db.info.remove({_id:ObjectId("63886ae788408cc1d1bd2d6f")})  ... using id delete a single data...
+.db.info.drop()  ---- delete a collection... 
+
+
+
+
+mysql JOIN QUERY
+
+select book.name,data.technology from book INNER JOIN data ON book.id=data.id;
+select book.id,book.name,book.age,data.technology from book INNER JOIN data ON book.id=data.id
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
